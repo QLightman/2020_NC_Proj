@@ -21,10 +21,9 @@ from keras import backend as keras
 
 from model.losses import bce_dice_loss, dice_loss, weighted_bce_dice_loss, weighted_dice_loss, dice_coeff
 
-def get_unet_128(input_shape=(512, 512, 1),
-                 num_classes=1):
+def get_unet(input_shape=(512, 512, 1), num_classes=1):
     inputs = Input(shape=input_shape)
-    # 128
+    # 512
 
     down1 = Conv2D(64, (3, 3), padding='same')(inputs)
     down1 = BatchNormalization()(down1)
@@ -33,7 +32,7 @@ def get_unet_128(input_shape=(512, 512, 1),
     down1 = BatchNormalization()(down1)
     down1 = Activation('relu')(down1)
     down1_pool = MaxPooling2D((2, 2), strides=(2, 2))(down1)
-    # 64
+    # 256
 
     down2 = Conv2D(128, (3, 3), padding='same')(down1_pool)
     down2 = BatchNormalization()(down2)
@@ -42,7 +41,7 @@ def get_unet_128(input_shape=(512, 512, 1),
     down2 = BatchNormalization()(down2)
     down2 = Activation('relu')(down2)
     down2_pool = MaxPooling2D((2, 2), strides=(2, 2))(down2)
-    # 32
+    # 128
 
     down3 = Conv2D(256, (3, 3), padding='same')(down2_pool)
     down3 = BatchNormalization()(down3)
@@ -51,7 +50,7 @@ def get_unet_128(input_shape=(512, 512, 1),
     down3 = BatchNormalization()(down3)
     down3 = Activation('relu')(down3)
     down3_pool = MaxPooling2D((2, 2), strides=(2, 2))(down3)
-    # 16
+    # 64
 
     down4 = Conv2D(512, (3, 3), padding='same')(down3_pool)
     down4 = BatchNormalization()(down4)
@@ -59,8 +58,9 @@ def get_unet_128(input_shape=(512, 512, 1),
     down4 = Conv2D(512, (3, 3), padding='same')(down4)
     down4 = BatchNormalization()(down4)
     down4 = Activation('relu')(down4)
-    down4_pool = MaxPooling2D((2, 2), strides=(2, 2))(down4)
-    # 8
+    down4_drop = Dropout(0.5)(down4)
+    down4_pool = MaxPooling2D((2, 2), strides=(2, 2))(down4_drop)
+    # 32
 
     center = Conv2D(1024, (3, 3), padding='same')(down4_pool)
     center = BatchNormalization()(center)
@@ -68,9 +68,13 @@ def get_unet_128(input_shape=(512, 512, 1),
     center = Conv2D(1024, (3, 3), padding='same')(center)
     center = BatchNormalization()(center)
     center = Activation('relu')(center)
+    center = Dropout(0.5)(center)
     # center
 
     up4 = UpSampling2D((2, 2))(center)
+    up4 = Conv2D(512, (2, 2), padding='same')(up4)
+    up4 = BatchNormalization()(up4)
+    up4 = Activation('relu')(up4)
     up4 = concatenate([down4, up4], axis=3)
     up4 = Conv2D(512, (3, 3), padding='same')(up4)
     up4 = BatchNormalization()(up4)
@@ -78,12 +82,12 @@ def get_unet_128(input_shape=(512, 512, 1),
     up4 = Conv2D(512, (3, 3), padding='same')(up4)
     up4 = BatchNormalization()(up4)
     up4 = Activation('relu')(up4)
-    up4 = Conv2D(512, (3, 3), padding='same')(up4)
-    up4 = BatchNormalization()(up4)
-    up4 = Activation('relu')(up4)
-    # 16
+    # 64
 
     up3 = UpSampling2D((2, 2))(up4)
+    up3 = Conv2D(256, (2, 2), padding='same')(up3)
+    up3 = BatchNormalization()(up3)
+    up3 = Activation('relu')(up3)
     up3 = concatenate([down3, up3], axis=3)
     up3 = Conv2D(256, (3, 3), padding='same')(up3)
     up3 = BatchNormalization()(up3)
@@ -91,12 +95,12 @@ def get_unet_128(input_shape=(512, 512, 1),
     up3 = Conv2D(256, (3, 3), padding='same')(up3)
     up3 = BatchNormalization()(up3)
     up3 = Activation('relu')(up3)
-    up3 = Conv2D(256, (3, 3), padding='same')(up3)
-    up3 = BatchNormalization()(up3)
-    up3 = Activation('relu')(up3)
-    # 32
+    # 128
 
     up2 = UpSampling2D((2, 2))(up3)
+    up2 = Conv2D(128, (2, 2), padding='same')(up2)
+    up2 = BatchNormalization()(up2)
+    up2 = Activation('relu')(up2)
     up2 = concatenate([down2, up2], axis=3)
     up2 = Conv2D(128, (3, 3), padding='same')(up2)
     up2 = BatchNormalization()(up2)
@@ -104,12 +108,12 @@ def get_unet_128(input_shape=(512, 512, 1),
     up2 = Conv2D(128, (3, 3), padding='same')(up2)
     up2 = BatchNormalization()(up2)
     up2 = Activation('relu')(up2)
-    up2 = Conv2D(128, (3, 3), padding='same')(up2)
-    up2 = BatchNormalization()(up2)
-    up2 = Activation('relu')(up2)
-    # 64
+    # 256
 
     up1 = UpSampling2D((2, 2))(up2)
+    up1 = Conv2D(64, (3, 3), padding='same')(up1)
+    up1 = BatchNormalization()(up1)
+    up1 = Activation('relu')(up1)
     up1 = concatenate([down1, up1], axis=3)
     up1 = Conv2D(64, (3, 3), padding='same')(up1)
     up1 = BatchNormalization()(up1)
@@ -117,10 +121,7 @@ def get_unet_128(input_shape=(512, 512, 1),
     up1 = Conv2D(64, (3, 3), padding='same')(up1)
     up1 = BatchNormalization()(up1)
     up1 = Activation('relu')(up1)
-    up1 = Conv2D(64, (3, 3), padding='same')(up1)
-    up1 = BatchNormalization()(up1)
-    up1 = Activation('relu')(up1)
-    # 128
+    # 512
 
     classify = Conv2D(num_classes, (1, 1), activation='sigmoid')(up1)
 
@@ -142,7 +143,7 @@ data_gen_args = dict(rotation_range=0.2,
                     vertical_flip=True,
                     fill_mode='nearest')
 myGene = trainGenerator(5,'data/membrane/train','image','label',data_gen_args,save_to_dir = None)
-model=get_unet_128()
+model=get_unet()
 
 
 model.compile('Adam', loss=weighted_bce_dice_loss, metrics=['accuracy'])
