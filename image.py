@@ -4,11 +4,12 @@ import numpy as np
 from skimage import img_as_ubyte
 from skimage.external import tifffile
 
-def tiff(form='data/membrane/pred/{:d}.png'):
+def tiff(form='data/membrane/test/{:d}_predict.png'):
     with tifffile.TiffWriter('pred.tif') as stack:
         for fid in range(30):
             filename = form.format(fid)
-            img = io.imread(filename)[:, :, 0]
+            img = io.imread(filename)
+            print(img.shape, np.unique(img))
             stack.save(img)
 
 
