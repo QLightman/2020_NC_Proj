@@ -7,7 +7,8 @@ model.train(
     train_annotations = 'data/membrane/train/label_rgb',
     checkpoints_path = 'checkpoints/',
     epochs = 3,
-    steps_per_epoch = 300
+    steps_per_epoch = 256,
+    colors = [[0, 0, 0], [0, 0, 255]]
 )
 
 out = model.predict_multiple(
