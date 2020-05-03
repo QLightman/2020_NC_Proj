@@ -8,7 +8,7 @@ def tiff(form='data/membrane/pred/{:d}.png'):
     with tifffile.TiffWriter('pred.tif') as stack:
         for fid in range(30):
             filename = form.format(fid)
-            img = io.imread(filename)[:, :, 2]
+            img = io.imread(filename)[:, :, 0]
             stack.save(img)
 
 
